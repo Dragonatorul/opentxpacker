@@ -9,13 +9,41 @@ interface UploadResult {
 	error?: string;
 }
 
+interface ProjectData {
+	version: string;
+	atlasWidth: number;
+	atlasHeight: number;
+	assets: Array<{
+		name: string;
+		dataUrl: string;
+		x: number;
+		y: number;
+		width: number;
+		height: number;
+	}>;
+}
+
 type EventMap = {
 	loadNewAssets: (assets: AssetData[]) => void;
 	uploadResult: (result: UploadResult) => void;
 	adjustZoom: (value: number) => void;
-	hoverTextureFileTree: (textureName: string) => void;
+	hoverTextureFileTree: (textureName: string | null) => void;
 	hoverTextureCanvas: (textureName: string | null) => void;
 	exportAtlas: (options: { format: string; textureFormat: string }) => void;
+	saveProject: () => void;
+	projectData: (data: ProjectData) => void;
+	loadProject: (data: ProjectData) => void;
+	requestManifest: () => void;
+	manifestData: (json: string) => void;
+	resizeAtlas: (size: { width: number; height: number }) => void;
+	setPadding: (padding: number) => void;
+	removeSprite: (name: string) => void;
+	setTrimEnabled: (enabled: boolean) => void;
+	setAlgorithm: (algorithm: string) => void;
+	setHeuristic: (heuristic: string) => void;
+	autoSizeAtlas: () => void;
+	atlasSizeChanged: (size: string) => void;
+	selectSprite: (name: string) => void;
 };
 
 type EventTypes = keyof EventMap;

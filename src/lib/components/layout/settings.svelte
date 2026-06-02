@@ -1,13 +1,61 @@
-<script>
+<script lang="ts">
 	import Select from '$lib/components/primitives/select.svelte';
 	import eventBus from '$lib/phaser/event-bus';
 	import Button from '../primitives/button.svelte';
 
 	let exportFormat = $state('Phaser 3');
 	let textureFormat = $state('PNG-32');
+	let atlasSize = $state('1024x1024');
+	let spritePadding = $state('0');
+	let trimTransparency = $state(false);
+	let packAlgorithm = $state('MaxRects');
+	let packHeuristic = $state('BestShortSideFit');
 
 	const exportOptions = ['Phaser 3', 'Multiatlas', 'JSON'];
 	const textureOptions = ['PNG-32', 'PNG-8', 'WebP'];
+	const atlasSizeOptions = ['Auto', '256x256', '512x512', '1024x1024', '2048x2048', '4096x4096'];
+	const paddingOptions = ['0', '1', '2', '4', '8'];
+	const algorithmOptions = ['MaxRects', 'Basic'];
+	const heuristicOptions = [
+		'BestShortSideFit',
+		'BestLongSideFit',
+		'BestAreaFit',
+		'BottomLeftRule',
+		'ContactPointRule'
+	];
+
+	const handleAtlasSizeChange = () => {
+		if (atlasSize === 'Auto') {
+			eventBus.emit('autoSizeAtlas');
+		} else {
+			const [w, h] = atlasSize.split('x').map(Number);
+			eventBus.emit('resizeAtlas', { width: w, height: h });
+		}
+	};
+
+	// Listen for auto-size result to update the dropdown display
+	eventBus.on('atlasSizeChanged', (size: string) => {
+		// Don't override if user manually set a size
+		if (atlasSize === 'Auto') {
+			// Keep "Auto" selected but we could update a label
+		}
+	});
+
+	const handlePaddingChange = () => {
+		eventBus.emit('setPadding', parseInt(spritePadding));
+	};
+
+	const handleTrimChange = () => {
+		eventBus.emit('setTrimEnabled', trimTransparency);
+	};
+
+	const handleAlgorithmChange = () => {
+		eventBus.emit('setAlgorithm', packAlgorithm);
+	};
+
+	const handleHeuristicChange = () => {
+		eventBus.emit('setHeuristic', packHeuristic);
+	};
 
 	const handleExport = () => {
 		eventBus.emit('exportAtlas', {
@@ -23,6 +71,21 @@
 
 <div class="form-control h-[calc(100%-2rem)]">
 	<div class="grid grid-cols-1 gap-2 pb-4">
+		<Select label="Algorithm" options={algorithmOptions} bind:value={packAlgorithm} onchange={handleAlgorithmChange} />
+		{#if packAlgorithm === 'MaxRects'}
+			<Select label="Heuristic" options={heuristicOptions} bind:value={packHeuristic} onchange={handleHeuristicChange} />
+		{/if}
+		<Select label="Atlas Size" options={atlasSizeOptions} bind:value={atlasSize} onchange={handleAtlasSizeChange} />
+		<Select label="Padding" options={paddingOptions} bind:value={spritePadding} onchange={handlePaddingChange} />
+		<label class="label cursor-pointer justify-start gap-3 px-0">
+			<input
+				type="checkbox"
+				class="toggle toggle-sm toggle-primary"
+				bind:checked={trimTransparency}
+				onchange={handleTrimChange}
+			/>
+			<span class="label-text text-sm font-bold">Trim Transparency</span>
+		</label>
 		<Select label="Texture Type" options={exportOptions} bind:value={exportFormat} />
 		<Select label="File Format" options={textureOptions} bind:value={textureFormat} />
 	</div>
